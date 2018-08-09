@@ -4,15 +4,16 @@ import java.util.Date
 
 import play.api.libs.json._
 
+case class Employee(
+                     id: Option[String],
+                     name: String,
+                     age: Int,
+                     project: String,
+                     client: String,
+                     joiningDate: Option[Date])
+
 object Employee {
 
-  case class Employee(
-                       id: Option[String],
-                       name: String,
-                       age: Int,
-                       project: String,
-                       client: String,
-                       joiningDate: Option[Date])
 
   implicit object writes extends OWrites[Employee] {
     def writes(employee: Employee): JsObject = Json.obj(

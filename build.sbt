@@ -9,8 +9,6 @@ val buildVersion = "0.16.0"
 
 version := buildVersion
 
-scalaVersion := "2.12.6"
-
 resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots"),
   "Sonatype Staging" at "https://oss.sonatype.org/content/repositories/staging/")
@@ -36,6 +34,8 @@ libraryDependencies ++= {
     "org.reactivemongo" % "reactivemongo-shaded-native" % nativeVer
   )
 }
+
+libraryDependencies += "org.webjars.bower" % "bootstrap-sass" % "3.3.6"
 
 routesGenerator := InjectedRoutesGenerator
 

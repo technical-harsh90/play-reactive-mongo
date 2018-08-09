@@ -1,14 +1,20 @@
 package controllers
 
 import java.util.{Date, UUID}
+
 import javax.inject.Inject
 import models.Employee._
+import models.Employee
+import models.PlayForms._
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.{MongoController, ReactiveMongoApi, ReactiveMongoComponents}
 import reactivemongo.api.Cursor
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection._
+import play.api.i18n.I18nSupport
+import utils.Constants
+
 import scala.concurrent.Future
 
 class HomeController @Inject()(
@@ -16,9 +22,10 @@ class HomeController @Inject()(
                                 val reactiveMongoApi: ReactiveMongoApi,
                                 implicit val materializer: akka.stream.Materializer
                               ) extends AbstractController(components)
-  with MongoController with ReactiveMongoComponents {
+  with MongoController with ReactiveMongoComponents with I18nSupport with Constants {
 
   implicit def ec = components.executionContext
+
 
   def index() = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
@@ -30,23 +37,34 @@ class HomeController @Inject()(
 
 
   def createEmployee: Action[AnyContent] = Action.async { implicit request =>
-    request.body.asJson match {
-      case Some(jsValue) =>
-        jsValue.validate[Employee].asOpt.fold(Future(BadRequest("Invalid information found for employee registration"))) { employee =>
-          collection.flatMap(_.insert(employee.copy(
+    employeeForm.bindFromRequest.fold(
+      formWithErrors => {
+        Future(BadRequest(views.html.register(formWithErrors)))
+      },
+      employee => {
+        collection.flatMap { col =>
+          col.insert(employee.copy(
             id = employee.id.orElse(Some(UUID.randomUUID().toString)),
-            joiningDate = Some(new Date()))
-          )).map(_ => Ok(s"Employee ${employee.name} has been registered"))
-        }
-
-      case None => Future(BadRequest("Employee details not found"))
-    }
+            joiningDate = Some(new Date())))
+        }.map(_ => Ok(s"Employee ${employee.name} has been registered"))
+      }
+    )
   }
 
-  def getEmployee(key: String, value: String): Action[AnyContent] = Action.async { implicit request =>
-    findEmployees(key, value).map {
-      list => Ok(Json.toJson(list))
-    }
+  def getEmployee: Action[AnyContent] = Action.async { implicit request =>
+    searchEmployeeForm.bindFromRequest.fold(
+      formWithErrors => {
+        Future(BadRequest(views.html.search(formWithErrors)))
+      },
+      searchCriteria => {
+        val (key, value) = searchCriteria
+        if (SEARCHING_FIELDS.contains(key)) {
+          findEmployees(key, value).map {
+            list => Ok(Json.toJson(list))
+          }
+        } else Future(BadRequest(views.html.search(searchEmployeeForm.fill("Invalid field to Search",""))))
+      }
+    )
   }
 
   private def findEmployees(key: String, value: String): Future[List[Employee]] = {

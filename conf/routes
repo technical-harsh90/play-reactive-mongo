@@ -5,8 +5,13 @@
 
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
+
+GET     /register/employee          controllers.PageController.employeeRegistrationForm
 POST    /employee/new               controllers.HomeController.createEmployee
-GET     /employee/get               controllers.HomeController.getEmployee(key: String, value: String)
+
+GET     /search/employee            controllers.PageController.employeeSearchForm
+GET     /employee/get               controllers.HomeController.getEmployee
+
 GET     /employee/remove            controllers.HomeController.removeEmployee(key: String, value: String)
 POST    /employee/update            controllers.HomeController.updateEmployee(key: String, value: String)
 

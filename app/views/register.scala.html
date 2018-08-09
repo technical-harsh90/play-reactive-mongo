@@ -1,0 +1,41 @@
+@(employeeForm: play.api.data.Form[Employee])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
+
+@import helper._
+
+@main("Welcome to Play") {
+
+    <style>
+        #employeeFormID {
+            margin-left: 10%;
+        }
+    </style>
+
+    <div  style="margin-left:12%;margin-top:5%;">
+        Enter the basic information of employee :<br><br>
+
+        @helper.form(action = routes.HomeController.createEmployee(), 'id -> "employeeFormID") {
+        @CSRF.formField
+        <table cellpadding="10">
+            <th></th>
+            <th></th>
+            <tr>
+                <td>@helper.inputText(employeeForm("name"))</td>
+                <td>@helper.input(employeeForm("age")) { (id, age, value, args) =>
+                    <input type="number" name="@age" id="@id" @toHtmlArgs(args)>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>@helper.inputText(employeeForm("project"))</td>
+                <td>@helper.inputText(employeeForm("client"))</td>
+            </tr>
+            <tr>
+                <td>@helper.inputDate(employeeForm("joiningDate"))</td>
+                <td></td>
+            </tr>
+        </table>
+
+        <input type="submit" value="Register"/>
+        }
+    </div>
+}

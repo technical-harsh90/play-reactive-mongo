@@ -22,18 +22,18 @@
             <th></th>
             <th></th>
             <tr>
-                <td>@helper.inputText(employeeForm("name"), 'id -> "box")</td>
-                <td>@helper.input(employeeForm("age"), 'id -> "box") { (id, age, value, args) =>
+                <td>@helper.inputText(employeeForm("name"), 'id -> "box", '_label -> "Name of Employee")</td>
+                <td>@helper.input(employeeForm("age"), 'id -> "box", '_label -> "Age of Employee") { (id, age, value, args) =>
                     <input type="number" name="@age" id="@id" @toHtmlArgs(args)>
                     }
                 </td>
             </tr>
             <tr>
-                <td>@helper.inputText(employeeForm("project"), 'id -> "box")</td>
-                <td>@helper.inputText(employeeForm("client"), 'id -> "box")</td>
+                <td>@helper.inputText(employeeForm("project"), 'id -> "box", '_label -> "Project Name of Employee")</td>
+                <td>@helper.inputText(employeeForm("client"), 'id -> "box", '_label -> "Client Name of Project")</td>
             </tr>
             <tr>
-                <td>@helper.inputDate(employeeForm("joiningDate"), 'id -> "box")</td>
+                <td>@helper.inputDate(employeeForm("joiningDate"), 'id -> "box", '_label -> "Joining Date of Employee")</td>
                 <td></td>
             </tr>
         </table>

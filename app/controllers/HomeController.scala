@@ -15,7 +15,7 @@ import reactivemongo.play.json.collection._
 import play.api.i18n.I18nSupport
 import utils.Constants
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class HomeController @Inject()(
                                 components: ControllerComponents,
@@ -24,7 +24,7 @@ class HomeController @Inject()(
                               ) extends AbstractController(components)
   with MongoController with ReactiveMongoComponents with I18nSupport with Constants {
 
-  implicit def ec = components.executionContext
+  implicit def ec: ExecutionContext = components.executionContext
 
 
   def index() = Action { implicit request: Request[AnyContent] =>
@@ -33,10 +33,10 @@ class HomeController @Inject()(
 
 
   def collection: Future[JSONCollection] = reactiveMongoApi.database.
-    map(_.collection[JSONCollection]("emp_details"))
+    map(_.collection[JSONCollection](COLLECTION_NAME))
 
 
-  def createEmployee = Action.async { implicit request =>
+  def createEmployee: Action[AnyContent] = Action.async { implicit request =>
     employeeForm.bindFromRequest.fold(
       formWithErrors => {
         Future(BadRequest(views.html.register(formWithErrors)))
@@ -46,7 +46,7 @@ class HomeController @Inject()(
           col.insert(employee.copy(
             id = employee.id.orElse(Some(UUID.randomUUID().toString)),
             joiningDate = Some(new Date())))
-        }.map(_ => Redirect("/register/employee").flashing("success" -> "Employee has been registered successfully"))
+        }.map(_ => Redirect("/register/employee").flashing(SUCCESSFUL_REGISTRATION))
       }
     )
   }
@@ -62,14 +62,15 @@ class HomeController @Inject()(
           findEmployees(key, value).map {
             list => Ok(views.html.showEmployee(list))
           }
-        } else Future(BadRequest(views.html.search(searchEmployeeForm.fill("Invalid field to Search",""))))
+        } else Future(BadRequest(views.html.search(searchEmployeeForm.fill(INVALID_SEARCH_FORM))))
       }
     )
   }
 
-  private def findEmployees(key: String, value: String): Future[List[Employee]] = {
-    collection.flatMap(_.find[JsObject, Employee](Json.obj(key -> value)).cursor[Employee]()
-      .collect[List](25, Cursor.FailOnError[List[Employee]]()))
+  def showEmployees: Action[AnyContent] = Action.async { implicit request =>
+    fetchAllEmployees map { employeeList =>
+      Ok(views.html.showEmployee(employeeList))
+    }
   }
 
   def updateEmployee(key: String, value: String): Action[AnyContent] = Action.async { implicit request =>
@@ -97,4 +98,16 @@ class HomeController @Inject()(
       }
     }.flatten
   }
+
+  private def findEmployees(key: String, value: String): Future[List[Employee]] = {
+    collection.flatMap(_.find[JsObject, Employee](Json.obj(key -> value)).cursor[Employee]()
+      .collect[List](-1, Cursor.FailOnError[List[Employee]]()))
+  }
+
+  private def fetchAllEmployees: Future[List[Employee]] = {
+    collection.flatMap(_.find[JsObject, Employee](Json.obj())
+      .sort(Json.obj("joiningDate" -> -1)).cursor[Employee]()
+      .collect[List](-1, Cursor.FailOnError[List[Employee]]()))
+  }
+
 }

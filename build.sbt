@@ -31,7 +31,12 @@ libraryDependencies ++= {
     "com.typesafe.play" %% "play-iteratees" % "2.6.1",
     "com.typesafe.akka" %% "akka-slf4j" % "2.5.4",
     "org.reactivemongo" %% "play2-reactivemongo" % playVer,
-    "org.reactivemongo" % "reactivemongo-shaded-native" % nativeVer
+    "org.reactivemongo" % "reactivemongo-shaded-native" % nativeVer,
+//    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
+    "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.0-M2" % Test,
+
+  "org.mockito" % "mockito-all" % "1.10.19" % Test
+
   )
 }
 

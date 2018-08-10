@@ -16,12 +16,16 @@
 
          <div>
              @helper.form(action = routes.HomeController.getEmployee(), 'id -> "searchEmployeeFormID") {
-             @CSRF.formField
-             @helper.inputText(searchEmployeeForm("key"), 'id -> "box", 'placeholder -> "Employee Name, Project or Client")
-             @helper.inputText(searchEmployeeForm("value"), 'id -> "box")
-
-             <input type="submit" value="Search"/>
+                 @CSRF.formField
+                 @helper.select(searchEmployeeForm("key"),
+                 helper.options("name"->"Employee Name", "project"->"Project Name", "client"->"Client Name"),
+                 '_label -> "Select Field")
+                 <!--@helper.inputText(searchEmployeeForm("key"), 'id -> "box", 'placeholder -> "Employee Name, Project or Client")-->
+                 @helper.inputText(searchEmployeeForm("value"), 'id -> "box", '_label -> "Select Value")
+                 <input type="submit" value="Search"/>
+            }
          </div>
-        }
+
+
     </div>
 }

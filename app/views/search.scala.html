@@ -2,23 +2,26 @@
 
 @import helper._
 
-@main("Welcome to Play") {
+@main("Employee Enquiry") {
 
     <style>
-        #searchEmployeeFormID {
-            margin-left: 10%;
+        #box {
+            border-style: inset;
+            border-width: unset;
         }
     </style>
 
-    <div style="margin-left:12%;margin-top:5%;">
-        Enter an employee entity (<b>name, project or client</b>) and value to search an employee :<br><br>
+    <div style="margin-left:-70%;margin-top:8%;">
+        <b style="font-size:105%;">Enter an employee entity (<i>name, project or client</i>) and value to search an employee</b><br><br>
 
-        @helper.form(action = routes.HomeController.getEmployee(), 'id -> "searchEmployeeFormID") {
-        @CSRF.formField
-        @helper.inputText(searchEmployeeForm("key"))
-        @helper.inputText(searchEmployeeForm("value"))
+         <div>
+             @helper.form(action = routes.HomeController.getEmployee(), 'id -> "searchEmployeeFormID") {
+             @CSRF.formField
+             @helper.inputText(searchEmployeeForm("key"), 'id -> "box", 'placeholder -> "Employee Name, Project or Client")
+             @helper.inputText(searchEmployeeForm("value"), 'id -> "box")
 
-        <input type="submit" value="submit"/>
+             <input type="submit" value="Search"/>
+         </div>
         }
     </div>
 }

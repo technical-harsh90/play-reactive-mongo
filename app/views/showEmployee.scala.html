@@ -1,0 +1,28 @@
+@(employees: List[models.Employee])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
+
+@import helper._
+
+@main("Employee Details") {
+
+    <table style="margin-left:-35%;margin-top:6%;" border="1px" cellspacing="5" cellpadding="8">
+        <tr style="background-color: #828596;">
+            <th>Employee ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Project</th>
+            <th>Client</th>
+            <th>JoiningDate</th>
+        </tr>
+
+        @employees.map { employee =>
+            <tr style="background-color: #d8d7e6;">
+                <td>@employee.id</td>
+                <td>@employee.name</td>
+                <td>@employee.age</td>
+                <td>@employee.project</td>
+                <td>@employee.client</td>
+                <td>@employee.joiningDate</td>
+            </tr>
+        }
+    </table>
+}

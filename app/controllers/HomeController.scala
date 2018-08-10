@@ -36,7 +36,7 @@ class HomeController @Inject()(
     map(_.collection[JSONCollection]("emp_details"))
 
 
-  def createEmployee: Action[AnyContent] = Action.async { implicit request =>
+  def createEmployee = Action.async { implicit request =>
     employeeForm.bindFromRequest.fold(
       formWithErrors => {
         Future(BadRequest(views.html.register(formWithErrors)))
@@ -46,7 +46,7 @@ class HomeController @Inject()(
           col.insert(employee.copy(
             id = employee.id.orElse(Some(UUID.randomUUID().toString)),
             joiningDate = Some(new Date())))
-        }.map(_ => Ok(s"Employee ${employee.name} has been registered"))
+        }.map(_ => Redirect("/register/employee").flashing("success" -> "Employee has been registered successfully"))
       }
     )
   }
@@ -60,7 +60,7 @@ class HomeController @Inject()(
         val (key, value) = searchCriteria
         if (SEARCHING_FIELDS.contains(key)) {
           findEmployees(key, value).map {
-            list => Ok(Json.toJson(list))
+            list => Ok(views.html.showEmployee(list))
           }
         } else Future(BadRequest(views.html.search(searchEmployeeForm.fill("Invalid field to Search",""))))
       }

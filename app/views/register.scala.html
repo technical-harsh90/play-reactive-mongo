@@ -1,17 +1,20 @@
-@(employeeForm: play.api.data.Form[Employee])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
+@(employeeForm: play.api.data.Form[Employee])(implicit request: RequestHeader, flash: Flash, messagesProvider: MessagesProvider)
 
 @import helper._
 
-@main("Welcome to Play") {
+@main("Employee Registration") {
 
     <style>
-        #employeeFormID {
-            margin-left: 10%;
+        #box {
+            border-style: inset;
+            border-width: unset;
         }
     </style>
 
-    <div  style="margin-left:12%;margin-top:5%;">
-        Enter the basic information of employee :<br><br>
+
+    <div  style="margin-left:-80%;margin-top:8%;">
+        <b style="background-color: #c9f3c9;">@flash.get("success").getOrElse()</b><br><br>
+        <b style="font-size:105%;">Enter the basic information of employee</b><br><br>
 
         @helper.form(action = routes.HomeController.createEmployee(), 'id -> "employeeFormID") {
         @CSRF.formField
@@ -19,18 +22,18 @@
             <th></th>
             <th></th>
             <tr>
-                <td>@helper.inputText(employeeForm("name"))</td>
-                <td>@helper.input(employeeForm("age")) { (id, age, value, args) =>
+                <td>@helper.inputText(employeeForm("name"), 'id -> "box")</td>
+                <td>@helper.input(employeeForm("age"), 'id -> "box") { (id, age, value, args) =>
                     <input type="number" name="@age" id="@id" @toHtmlArgs(args)>
                     }
                 </td>
             </tr>
             <tr>
-                <td>@helper.inputText(employeeForm("project"))</td>
-                <td>@helper.inputText(employeeForm("client"))</td>
+                <td>@helper.inputText(employeeForm("project"), 'id -> "box")</td>
+                <td>@helper.inputText(employeeForm("client"), 'id -> "box")</td>
             </tr>
             <tr>
-                <td>@helper.inputDate(employeeForm("joiningDate"))</td>
+                <td>@helper.inputDate(employeeForm("joiningDate"), 'id -> "box")</td>
                 <td></td>
             </tr>
         </table>

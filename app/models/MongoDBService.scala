@@ -1,15 +1,17 @@
 package models
 
 import java.util.{Date, UUID}
+
 import javax.inject.Inject
 import models.Employee._
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.Cursor
-import reactivemongo.api.commands.WriteResult
+import reactivemongo.api.commands.{UpdateWriteResult, WriteResult}
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.{JSONCollection, _}
 import utils.Constants
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class MongoDBService @Inject()(val reactiveMongoApi: ReactiveMongoApi)(executionContext: ExecutionContext)
@@ -38,21 +40,22 @@ class MongoDBService @Inject()(val reactiveMongoApi: ReactiveMongoApi)(execution
       .collect[List](-1, Cursor.FailOnError[List[Employee]]()))
   }
 
-  def updateEmployee(key: String, value: String, employee: Employee): Future[List[_]] = {
+  def updateEmployee(key: String, value: String, employee: Employee): Future[List[Future[UpdateWriteResult]]] = {
     findEmployeeByEntity(key, value).map { employeeList =>
       employeeList map modify(key, value, employee)
     }
   }
 
-  def modify(key: String, value: String, employee: Employee): PartialFunction[Employee, _] = {
+  private def modify(key: String, value: String, employee: Employee): PartialFunction[Employee, Future[UpdateWriteResult]] = {
     case empDetails: Employee => {
-      collection.flatMap(_.update(Json.obj(key -> value), employee.copy(id = empDetails.id), multi = true))
+      collection.flatMap(_.update(Json.obj(key -> value), employee.copy(id = empDetails.id)))
     }
   }
 
-  def removeEmployee(key: String, value: String) = {
-    collection.map(_.findAndRemove[JsObject](Json.obj(key -> value)))
+  def removeEmployee(key: String, value: String): Future[Option[Employee]] = {
+    collection.map(_.findAndRemove[JsObject](Json.obj(key -> value))).flatMap(_.map {
+      _.result[Employee]
+    })
   }
-
 
 }

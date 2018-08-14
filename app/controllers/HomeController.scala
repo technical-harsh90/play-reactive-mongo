@@ -1,11 +1,12 @@
 package controllers
 
 import javax.inject.Inject
-import models.{Employee, MongoDBService}
 import models.PlayForms.{employeeForm, searchEmployeeForm}
+import models.{Employee, MongoDBService}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import utils.Constants
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class HomeController @Inject()(components: ControllerComponents, service: MongoDBService)
@@ -33,7 +34,7 @@ class HomeController @Inject()(components: ControllerComponents, service: MongoD
         Future(BadRequest(views.html.register(formWithErrors)))
       },
       employee => {
-        service.insertEmployee(employee).map(_ => Redirect("/register/employee")
+        service.insertEmployee(employee).map(_ => Redirect(routes.PageController.employeeRegistrationForm())
           .flashing(SUCCESSFUL_REGISTRATION))
       }
     )
@@ -99,11 +100,9 @@ class HomeController @Inject()(components: ControllerComponents, service: MongoD
     * @return
     */
   def removeEmployee(key: String, value: String): Action[AnyContent] = Action.async { implicit request =>
-    service.removeEmployee(key, value).flatMap {
-      _ flatMap { command =>
-        command.result[Employee].fold(Future(BadRequest(REMOVE_WITH_ERROR.format(key, value)))) {
-          _ => Future(Ok(REMOVE_WITH_SUCCESS))
-        }
+    service.removeEmployee(key, value) flatMap {
+      _.fold(Future(BadRequest(REMOVE_WITH_ERROR.format(key, value)))) {
+        _ => Future(Ok(REMOVE_WITH_SUCCESS))
       }
     }
   }

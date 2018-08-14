@@ -38,7 +38,9 @@ libraryDependencies ++= {
   )
 }
 
-libraryDependencies += "org.webjars.bower" % "bootstrap-sass" % "3.3.6"
+
+libraryDependencies += "com.github.simplyscala" %% "scalatest-embedmongo" % "0.2.4" % "test"
+
 
 routesGenerator := InjectedRoutesGenerator
 

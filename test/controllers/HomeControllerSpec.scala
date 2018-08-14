@@ -1,15 +1,17 @@
 package controllers
 
+import helper.TestData
 import models.{Employee, MongoDBService}
+import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
+import play.api.libs.json.Json
+import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
 import reactivemongo.api.commands.WriteResult
-
 import scala.concurrent.{ExecutionContext, Future}
-
 
 /**
   * Add your spec here.
@@ -19,7 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 
 
-class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting with MockitoSugar {
+class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting with MockitoSugar with TestData {
 
 
   val service: MongoDBService = mock[MongoDBService]
@@ -27,7 +29,7 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
   implicit def ec: ExecutionContext = stubControllerComponents().executionContext
 
-  "HomeController GET" should {
+  "HomeController" should {
 
     "render the index page from a new instance of controller" in {
       val home = controller.index().apply(FakeRequest(GET, "/"))
@@ -55,18 +57,72 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
       contentAsString(home) must include("Welcome to EMS")
     }
 
-    val employeeInfo = Seq("name" -> "John", "age" -> "20", "project" -> "Test Project", "client" -> "Test Client")
-
-    /*"create an employee in mongodb" in {
-      import org.mockito.Mockito._
-      when(service.insertEmployee(Employee(None, "John", 20, "Test Project", "Test Client", None))).thenReturn(Future(WriteResult))
+    "not create an employee in mongodb due to bad data" in {
+      val mockResult = mock[WriteResult]
+      when(service.insertEmployee(MockBody.employeeInfoInCorrect)).thenReturn(Future(mockResult))
       val home = controller.createEmployee().apply(FakeRequest(POST, "/employee/new")
-        .withFormUrlEncodedBody(employeeInfo: _*))
+        .withFormUrlEncodedBody(JsonBody.employeeInfoIncorrect: _*).withCSRFToken)
+      status(home) mustBe BAD_REQUEST
+    }
 
+    "create an employee in mongodb" in {
+      val mockResult = mock[WriteResult]
+      when(service.insertEmployee(MockBody.employeeInfoCorrect)).thenReturn(Future(mockResult))
+      val home = controller.createEmployee().apply(FakeRequest(POST, "/employee/new")
+        .withFormUrlEncodedBody(JsonBody.employeeInfoCorrect: _*))
+      status(home) mustBe SEE_OTHER
+    }
+
+    "show the list of all employees" in {
+      when(service.fetchAllEmployees).thenReturn(Future(List(MockBody.employeeInfoCorrect)))
+      val home = controller.showEmployees().apply(FakeRequest(GET, "/show/employees"))
       status(home) mustBe OK
-      contentType(home) mustBe Some("application/json")
-      contentAsString(home) must include("Employee Registration")
-    }*/
+    }
+
+    "not search an employee in mongodb due to bad data" in {
+      when(service.findEmployeeByEntity("name", null)).thenReturn(Future(List.empty[Employee]))
+      val home = controller.getEmployee.apply(FakeRequest(GET, "/employee/get")
+        .withFormUrlEncodedBody(JsonBody.searchWithBlankData: _*).withCSRFToken)
+      status(home) mustBe BAD_REQUEST
+    }
+
+    "not search an employee in mongodb due to invalid entity" in {
+      when(service.findEmployeeByEntity("joiningDate", "August 8, 1990")).thenReturn(Future(List.empty[Employee]))
+      val home = controller.getEmployee.apply(FakeRequest(GET, "/employee/get")
+        .withFormUrlEncodedBody(JsonBody.searchWithInvalidEntity: _*).withCSRFToken)
+      status(home) mustBe BAD_REQUEST
+    }
+
+    "search an employee in mongodb with valid entity" in {
+      when(service.findEmployeeByEntity("project", "Apple Maps"))
+        .thenReturn(Future(List(MockBody.employeeInfoCorrect.copy(project = "Apple Maps"))))
+      val home = controller.getEmployee.apply(FakeRequest(GET, "/employee/get")
+        .withFormUrlEncodedBody(JsonBody.searchWithValidEntity: _*).withCSRFToken)
+      status(home) mustBe OK
+    }
+
+    "not update an employee in mongodb due when updated json is not provided" in {
+      val home = controller.updateEmployee("name", "John").apply(FakeRequest(POST, "/employee/update?key=name?value=John"))
+      status(home) mustBe BAD_REQUEST
+    }
+
+    "not update an employee in mongodb due when invalid updated json is provided" in {
+      val home = controller.updateEmployee("name", "John").apply(FakeRequest(POST, "/employee/update?key=name?value=John")
+        .withJsonBody(Json.toJson((JsonBody.employeeInfoCorrect :+ ("project" -> "Apple Maps")).toMap)))
+      status(home) mustBe BAD_REQUEST
+    }
+
+    "not remove an employee in mongodb due when invalid entity value is provided" in {
+      when(service.removeEmployee("name", "Stewart")).thenReturn(Future(None: Option[Employee]))
+      val home = controller.removeEmployee("name", "Stewart").apply(FakeRequest(GET, "/employee/remove?key=name?value=Stewart"))
+      status(home) mustBe BAD_REQUEST
+    }
+
+    "remove an employee in mongodb due when valid entity value is provided" in {
+      when(service.removeEmployee("name", "John")).thenReturn(Future(Some(MockBody.employeeInfoCorrect): Option[Employee]))
+      val home = controller.removeEmployee("name", "John").apply(FakeRequest(GET, "/employee/remove?key=name?value=John"))
+      status(home) mustBe OK
+    }
 
   }
 }
